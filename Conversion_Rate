@@ -114,7 +114,7 @@ SELECT
     client_id,
     MIN(created_at) AS min_created_at
 FROM
-    cashboosts cb
+    cashboosts 
 WHERE
     state = 'CASH_BOOST_STATE_QUALIFIED'
 GROUP BY
@@ -126,7 +126,7 @@ SELECT
     client_id,
     MIN(created_at) AS min_created_at
 FROM
-    cashboosts cb
+    cashboosts 
 WHERE
     state = 'CASH_BOOST_STATE_SETUP'
 GROUP BY
@@ -138,7 +138,7 @@ SELECT
     client_id,
     MIN(created_at) AS min_created_at
 FROM
-    cashboosts cb
+    cashboosts 
 WHERE
     state = 'CASH_BOOST_STATE_CHECKOUT'
 GROUP BY
@@ -150,7 +150,7 @@ SELECT
     client_id,
     MIN(created_at) AS min_created_at
 FROM
-    cashboosts cb
+    cashboosts 
 WHERE
     state = 'CASH_BOOST_STATE_PROCESSING'
 GROUP BY
@@ -162,7 +162,7 @@ SELECT
     client_id,
     MIN(created_at) AS min_created_at
 FROM
-    cashboosts cb
+    cashboosts 
 WHERE
     state = 'CASH_BOOST_STATE_APPROVED'
 GROUP BY
