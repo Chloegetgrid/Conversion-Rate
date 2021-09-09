@@ -16,18 +16,18 @@ ORDER BY
 
 SELECT
     DATE(min_created_at) AS date,
-    COUNT(token) AS SETUP_NUMBER
+    COUNT(client_id) AS SETUP_NUMBER
 FROM
 (
 SELECT
-    token,
+    client_id,
     MIN(created_at) AS min_created_at
 FROM
     cashboosts cb
 WHERE
     state = 'CASH_BOOST_STATE_SETUP'
 GROUP BY
-    token
+    client_id
 ) q 
 GROUP BY 
     1 
@@ -98,3 +98,78 @@ GROUP BY
     1 
 ORDER BY 
     1 DESC
+
+
+### FULL TABLE AT THE END
+SELECT
+    DATE(C1.min_created_at) AS date,
+    COUNT(C1.client_id) AS QUALIFIED_NUMBER,
+    COUNT(C2.client_id) AS SETUP_NUMBER,
+    COUNT(C3.client_id) AS CHECKOUT_NUMBER,
+    COUNT(C4.client_id) AS PROCESSING_NUMBER,
+    COUNT(C5.client_id) AS APPROVED_NUMBER
+FROM
+(
+SELECT
+    client_id,
+    MIN(created_at) AS min_created_at
+FROM
+    cashboosts cb
+WHERE
+    state = 'CASH_BOOST_STATE_QUALIFIED'
+GROUP BY
+    client_id
+) C1
+LEFT JOIN 
+(
+SELECT
+    client_id,
+    MIN(created_at) AS min_created_at
+FROM
+    cashboosts cb
+WHERE
+    state = 'CASH_BOOST_STATE_SETUP'
+GROUP BY
+    client_id
+) C2
+ON C1.client_id = C2.client_id
+LEFT JOIN(
+SELECT
+    client_id,
+    MIN(created_at) AS min_created_at
+FROM
+    cashboosts cb
+WHERE
+    state = 'CASH_BOOST_STATE_CHECKOUT'
+GROUP BY
+    client_id
+) C3
+ON C3.client_id = C2.client_id
+LEFT JOIN(
+SELECT
+    client_id,
+    MIN(created_at) AS min_created_at
+FROM
+    cashboosts cb
+WHERE
+    state = 'CASH_BOOST_STATE_PROCESSING'
+GROUP BY
+    client_id
+) C4
+ON C4.client_id = C3.client_id
+LEFT JOIN(
+SELECT
+    client_id,
+    MIN(created_at) AS min_created_at
+FROM
+    cashboosts cb
+WHERE
+    state = 'CASH_BOOST_STATE_APPROVED'
+GROUP BY
+    client_id) C5
+ON C5.client_id = C4.client_id
+GROUP BY 
+    1 
+ORDER BY 
+    1 DESC
+    
