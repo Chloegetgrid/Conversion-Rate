@@ -1,0 +1,100 @@
+### Qualified Number 
+
+SELECT 
+    DATE(created_at), 
+    COUNT(client_id) AS QUALIFIED_NUMBER
+FROM 
+    cashboosts
+WHERE 
+    STATE = 'CASH_BOOST_STATE_QUALIFIED'
+GROUP BY
+    DATE(created_at)
+ORDER BY 
+    1 DESC
+
+### Setup Number
+
+SELECT
+    DATE(min_created_at) AS date,
+    COUNT(token) AS SETUP_NUMBER
+FROM
+(
+SELECT
+    token,
+    MIN(created_at) AS min_created_at
+FROM
+    cashboosts cb
+WHERE
+    state = 'CASH_BOOST_STATE_SETUP'
+GROUP BY
+    token
+) q 
+GROUP BY 
+    1 
+ORDER BY 
+    1 DESC
+    
+### CHECKOUT 
+
+SELECT
+    DATE(min_created_at) AS date,
+    COUNT(token) AS CHECKOUT_NUMBER
+FROM
+(
+SELECT
+    token,
+    MIN(created_at) AS min_created_at
+FROM
+    cashboosts cb
+WHERE
+    state = 'CASH_BOOST_STATE_CHECKOUT'
+GROUP BY
+    token
+) q 
+GROUP BY 
+    1 
+ORDER BY 
+    1 DESC
+    
+### PROCESSING
+SELECT
+    DATE(min_created_at) AS date,
+    COUNT(token) AS PROCESSING_NUMBER
+FROM
+(
+SELECT
+    token,
+    MIN(created_at) AS min_created_at
+FROM
+    cashboosts cb
+WHERE
+    state = 'CASH_BOOST_STATE_PROCESSING'
+GROUP BY
+    token
+) q 
+GROUP BY 
+    1 
+ORDER BY 
+    1 DESC
+
+### APPROVED
+
+SELECT
+    DATE(min_created_at) AS date,
+    COUNT(token) AS APPROVED_NUMBER
+FROM
+(
+SELECT
+    token,
+    MIN(created_at) AS min_created_at
+FROM
+    cashboosts cb
+WHERE
+    state = 'CASH_BOOST_STATE_APPROVED'
+GROUP BY
+    token
+) q 
+GROUP BY 
+    1 
+ORDER BY 
+    1 DESC
