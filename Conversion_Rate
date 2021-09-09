@@ -1,4 +1,4 @@
-### Qualified Number 
+Qualified Number 
 
 SELECT 
     DATE(created_at), 
@@ -173,3 +173,153 @@ GROUP BY
 ORDER BY 
     1 DESC
     
+### INNER JOIN FOUR TABLES
+SELECT C1.DATE, C1.SETUP_NUMBER, C2.CHECKOUT_NUMBER, C3.PROCESSING_NUMBER, C4.APPROVED_NUMBER
+FROM
+    (SELECT
+        DATE(min_created_at) AS date,
+        COUNT(token) AS SETUP_NUMBER
+    FROM
+    (
+    SELECT
+        token,
+        MIN(created_at) AS min_created_at
+    FROM
+        cashboosts cb
+    WHERE
+        state = 'CASH_BOOST_STATE_SETUP' 
+    GROUP BY
+        token
+    ) q
+GROUP BY 
+    1 
+ORDER BY 
+    1 DESC) C1
+INNER JOIN (
+SELECT
+        DATE(min_created_at) AS date,
+        COUNT(token) AS CHECKOUT_NUMBER
+    FROM
+    (
+    SELECT
+        token,
+        MIN(created_at) AS min_created_at
+    FROM
+        cashboosts cb
+    WHERE
+        state = 'CASH_BOOST_STATE_CHECKOUT'
+    GROUP BY
+        token
+    ) q1
+GROUP BY 
+    1 
+ORDER BY 
+    1 DESC) C2
+ON C1.date = C2.date
+INNER JOIN (
+SELECT
+        DATE(min_created_at) AS date,
+        COUNT(token) AS PROCESSING_NUMBER
+    FROM
+    (
+    SELECT
+        token,
+        MIN(created_at) AS min_created_at
+    FROM
+        cashboosts cb
+    WHERE
+        state = 'CASH_BOOST_STATE_PROCESSING'
+    GROUP BY
+        token
+    ) q2
+GROUP BY 
+    1 
+ORDER BY 
+    1 DESC) C3
+ON C1.DATE = C3.DATE 
+INNER JOIN (
+SELECT
+        DATE(min_created_at) AS date,
+        COUNT(token) AS APPROVED_NUMBER
+    FROM
+    (
+    SELECT
+        token,
+        MIN(created_at) AS min_created_at
+    FROM
+        cashboosts cb
+    WHERE
+        state = 'CASH_BOOST_STATE_APPROVED'
+    GROUP BY
+        token
+    ) q3
+GROUP BY 
+    1 
+ORDER BY 
+    1 DESC) C4
+ON C4.DATE = C1.DATE
+
+### LEFT JOIN ON CLIENT ID FOR FOUR TABLES. 
+SELECT
+    DATE(C1.min_created_at) AS date,
+    COUNT(C1.client_id) AS SETUP_NUMBER,
+    COUNT(C2.client_id) AS CHECKOUT_NUMBER,
+    COUNT(C2.client_id)/COUNT(C1.client_id) AS CHECKOUT_RATE,
+    COUNT(C3.client_id) AS PROCESSING_NUMBER,
+    COUNT(C3.client_id)/COUNT(C1.client_id) AS PROCESSING_RATE,
+    COUNT(C4.client_id) AS APPROVED_NUMBER,
+    COUNT(C4.client_id)/COUNT(C1.client_id) AS APPROVED_RATE
+FROM
+(
+SELECT
+    client_id,
+    MIN(created_at) AS min_created_at
+FROM
+    cashboosts 
+WHERE
+    state = 'CASH_BOOST_STATE_SETUP'
+GROUP BY
+    client_id
+) C1
+LEFT JOIN(
+SELECT
+    client_id,
+    MIN(created_at) AS min_created_at
+FROM
+    cashboosts 
+WHERE
+    state = 'CASH_BOOST_STATE_CHECKOUT'
+GROUP BY
+    client_id
+) C2
+ON C1.client_id = C2.client_id
+LEFT JOIN(
+SELECT
+    client_id,
+    MIN(created_at) AS min_created_at
+FROM
+    cashboosts 
+WHERE
+    state = 'CASH_BOOST_STATE_PROCESSING'
+GROUP BY
+    client_id
+) C3
+ON C2.client_id = C3.client_id
+LEFT JOIN(
+SELECT
+    client_id,
+    MIN(created_at) AS min_created_at
+FROM
+    cashboosts 
+WHERE
+    state = 'CASH_BOOST_STATE_APPROVED'
+GROUP BY
+    client_id) C4
+ON 
+    C3.client_id = C4.client_id
+WHERE 
+    DATE_FORMAT(C1.min_created_at, "%m-%d-%Y") >= "08-07-2021"
+GROUP BY 
+    1 
+ORDER BY 
+    1 DESC
