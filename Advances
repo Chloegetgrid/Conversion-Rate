@@ -65,3 +65,101 @@ GROUP BY
     1 
 ORDER BY 
     1 DESC
+
+
+SELECT Q1.DATE_NOW, Q1.SCHEDULED_NUMBER, Q2.SENT_NUMBER, Q2.SENT_NUMBER/Q1.SCHEDULED_NUMBER 
+FROM (
+    SELECT 
+        DATE(MIN_CREATED_AT) AS DATE_NOW,
+        COUNT(TOKEN) AS SCHEDULED_NUMBER
+    FROM (
+            SELECT 
+                TOKEN, 
+                MIN(advances.created_at) AS MIN_CREATED_AT
+            FROM 
+                advances
+            WHERE 
+                STATE = 'ADVANCE_STATE_PAYOUT_SCHEDULED'
+            AND    
+                ITERATION = 0
+            GROUP BY 
+                TOKEN
+            ) TABLE1
+    GROUP BY 
+        1 
+    ORDER BY 
+        1 DESC) Q1
+INNER JOIN (
+    SELECT 
+        DATE(MIN_CREATED_AT) AS DATE_NOW,
+        COUNT(TOKEN) AS SENT_NUMBER
+    FROM (
+            SELECT 
+                TOKEN, 
+                MIN(advances.created_at) AS MIN_CREATED_AT
+            FROM 
+                advances
+            WHERE 
+                STATE = 'ADVANCE_STATE_PAYOUT_SENT'
+            AND ITERATION = 0
+            GROUP BY 
+                TOKEN
+            ) TABLE2
+    GROUP BY 
+        1 
+    ORDER BY 
+        1 DESC) Q2
+ON Q1.DATE_NOW = Q2.DATE_NOW
+GROUP BY 
+    1 
+ORDER BY 
+    1 DESC
+    
+    
+ SELECT Q1.DATE_NOW, Q1.SCHEDULED_NUMBER, Q2.SENT_NUMBER, Q2.SENT_NUMBER/Q1.SCHEDULED_NUMBER 
+FROM (
+    SELECT 
+        DATE(MIN_CREATED_AT) AS DATE_NOW,
+        COUNT(TOKEN) AS SCHEDULED_NUMBER
+    FROM (
+            SELECT 
+                TOKEN, 
+                MIN(advances.created_at) AS MIN_CREATED_AT
+            FROM 
+                advances
+            WHERE 
+                STATE = 'ADVANCE_STATE_PAYOUT_SCHEDULED'
+            AND    
+                ITERATION = 0
+            GROUP BY 
+                TOKEN
+            ) TABLE1
+    GROUP BY 
+        1 
+    ORDER BY 
+        1 DESC) Q1
+INNER JOIN (
+    SELECT 
+        DATE(MIN_CREATED_AT) AS DATE_NOW,
+        COUNT(TOKEN) AS SENT_NUMBER
+    FROM (
+            SELECT 
+                TOKEN, 
+                MIN(advances.created_at) AS MIN_CREATED_AT
+            FROM 
+                advances
+            WHERE 
+                STATE = 'ADVANCE_STATE_PAYOUT_SENT'
+            AND ITERATION = 0
+            GROUP BY 
+                TOKEN
+            ) TABLE2
+    GROUP BY 
+        1 
+    ORDER BY 
+        1 DESC) Q2
+ON Q1.DATE_NOW = Q2.DATE_NOW
+GROUP BY 
+    1 
+ORDER BY 
+    1 DESC
