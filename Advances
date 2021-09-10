@@ -1,0 +1,18 @@
+SELECT 
+    DATE(MIN_APPROVED_AT) AS DATE,
+    COUNT(TOKEN)
+FROM (
+    SELECT 
+        TOKEN, 
+        MIN(advances.created_at) AS MIN_APPROVED_AT
+    FROM 
+        advances
+    WHERE 
+        STATE = 'ADVANCE_STATE_PAYOUT_SENT'
+    GROUP BY 
+        TOKEN
+    ) TABLE1
+GROUP BY 
+    1 
+ORDER BY 
+    1 DESC
