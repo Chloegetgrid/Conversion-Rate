@@ -1,0 +1,3 @@
+### Date Formating 
+SELECT DATE_FORMAT(joined_at, "%m-%d-%Y") FROM clients
+WHERE DATE_FORMAT(joined_at, "%m-%d-%Y") > "01-01-2021" 
