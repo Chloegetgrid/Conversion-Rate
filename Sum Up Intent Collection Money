@@ -1,0 +1,100 @@
+
+### Sum Total sum up money we want to collect per day
+SELECT
+    ci.date AS date,
+    SUM(q.captured) AS previously_captured,
+    MIN(q.advance_amount) AS advance_amount,
+    MIN(q.advance_amount) - SUM(q.captured) AS outstanding
+from
+(
+SELECT 
+    DISTINCT DATE(processing_scheduled_at) AS date
+FROM 
+    collection_intents 
+WHERE
+    state LIKE '%SCHEDULED%'
+    AND client_id = 1964150
+) ci 
+LEFT JOIN 
+(
+    select
+        collected_per_day.date AS date,
+        collected_per_day.captured AS captured,
+        a.amount AS advance_amount
+    from
+    (
+        SELECT
+            advance_id,
+            DATE(created_at) AS date,
+            SUM(captured_amount) AS captured
+        FROM
+            advance_payments
+        WHERE
+            stripe_failure_code IS NULL
+        GROUP by
+            1, 2
+    ) collected_per_day
+    join 
+        advances a ON a.id = collected_per_day.advance_id
+    join 
+        cashboosts cb ON cb.id = a.cashboost_id
+    join
+        clients c on c.id = cb.client_id
+    WHERE
+        client_id = 1964150
+) q ON ci.date > q.date
+group by 
+    1
+order by
+    1 desc
+    
+    
+    
+    
+    
+Right Version: 
+SELECT
+    ci.date AS date,
+    SUM(q.captured) AS previously_captured,
+    SUM(q.advance_amount) AS advance_amount,
+    SUM(q.advance_amount) - SUM(q.captured) AS outstanding
+from
+(
+SELECT 
+    DISTINCT DATE(processing_scheduled_at) AS date
+FROM 
+    collection_intents 
+WHERE
+    state LIKE '%SCHEDULED%'
+) ci 
+LEFT JOIN 
+(SELECT
+        collected_per_day.date AS date,
+        SUM(collected_per_day.captured) AS captured,
+        SUM(a.amount) AS advance_amount
+    FROM
+    (
+        SELECT
+            advance_id,
+            DATE(created_at) AS date,
+            SUM(captured_amount) AS captured
+        FROM
+            advance_payments
+        WHERE
+            stripe_failure_code IS NULL
+        GROUP by
+            1, 2
+    ) collected_per_day
+    join 
+        advances a ON a.id = collected_per_day.advance_id
+    join 
+        cashboosts cb ON cb.id = a.cashboost_id
+    join
+        clients c on c.id = cb.client_id
+    GROUP BY 1
+    ORDER BY 1 DESC
+) q ON ci.date > q.date
+group by 
+    1
+order by
+    1 desc
