@@ -98,3 +98,52 @@ group by
     1
 order by
     1 desc
+
+
+
+SELECT
+    collection_intents.date AS date,
+    SUM(temp.captured) AS previously_captured,
+    SUM(temp.advance_amount) AS advance_amount,
+    SUM(temp.advance_amount) - SUM(temp.captured) AS outstanding
+from
+(
+SELECT 
+    DISTINCT DATE(processing_scheduled_at) AS date
+FROM 
+    collection_intents 
+WHERE
+    state LIKE '%SCHEDULED%'
+) collection_intents 
+LEFT JOIN 
+(
+    select
+        collected_per_day.date AS date, clients.id,
+        collected_per_day.captured AS captured,
+        advances.amount AS advance_amount
+    from
+    (
+        SELECT
+            advance_id,
+            DATE(created_at) AS date, 
+            SUM(captured_amount) AS captured
+        FROM
+            advance_payments
+        WHERE
+            stripe_failure_code IS NULL
+        GROUP by
+            1, 2
+    ) collected_per_day
+    join 
+        advances ON advances.id = collected_per_day.advance_id
+    join 
+        cashboosts ON cashboosts.id = advances.cashboost_id
+    JOIN
+        clients on clients.id = cashboosts.client_id
+    JOIN 
+        collection_intents ON collection_intents.client_id = cashboosts.client_id 
+) temp ON collection_intents.date > temp.date
+group by 
+    1
+order by
+    1 desc
