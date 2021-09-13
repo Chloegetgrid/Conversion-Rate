@@ -1,5 +1,5 @@
 
-### Sum Total sum up money we want to collect per day
+### Sum Total sum up money we want to collect for a user
 SELECT
     collection_intents.date AS date,
     SUM(temp.captured) AS previously_captured,
@@ -51,7 +51,7 @@ order by
     
     
     
-    
+### Sum Total sum up money we want to collect 
 Right Version: 
 SELECT
     ci.date AS date,
