@@ -1,10 +1,10 @@
 
 ### Sum Total sum up money we want to collect per day
 SELECT
-    ci.date AS date,
-    SUM(q.captured) AS previously_captured,
-    MIN(q.advance_amount) AS advance_amount,
-    MIN(q.advance_amount) - SUM(q.captured) AS outstanding
+    collection_intents.date AS date,
+    SUM(temp.captured) AS previously_captured,
+    MIN(temp.advance_amount) AS advance_amount,
+    MIN(temp.advance_amount) - SUM(temp.captured) AS outstanding
 from
 (
 SELECT 
@@ -14,13 +14,13 @@ FROM
 WHERE
     state LIKE '%SCHEDULED%'
     AND client_id = 1964150
-) ci 
+) collection_intents 
 LEFT JOIN 
 (
     select
         collected_per_day.date AS date,
         collected_per_day.captured AS captured,
-        a.amount AS advance_amount
+        advances.amount AS advance_amount
     from
     (
         SELECT
@@ -35,14 +35,14 @@ LEFT JOIN
             1, 2
     ) collected_per_day
     join 
-        advances a ON a.id = collected_per_day.advance_id
+        advances ON advances.id = collected_per_day.advance_id
     join 
-        cashboosts cb ON cb.id = a.cashboost_id
+        cashboosts ON cashboosts.id = advances.cashboost_id
     join
-        clients c on c.id = cb.client_id
+        clients on clients.id = cashboosts.client_id
     WHERE
         client_id = 1964150
-) q ON ci.date > q.date
+) temp ON collection_intents.date > temp.date
 group by 
     1
 order by
