@@ -1,0 +1,91 @@
+#TABLE FOR CAPTURE AMOUNT
+SELECT
+        DATE(created_at) AS DATE,
+        SUM(captured_amount) AS captured
+    FROM
+        advance_payments
+    WHERE
+        stripe_failure_code IS NULL
+    GROUP BY
+        1
+    ORDER BY 1 DESC;
+#TABLE FOR PAYOUT AMOUNT
+SELECT
+    DATE(created_at) AS DATE,
+    SUM(AMOUNT)
+
+FROM
+     advances
+WHERE
+    STATE = 'ADVANCE_STATE_PAYOUT_SENT'
+GROUP BY
+    1;
+
+#COMBINE TWO TABLES
+SELECT PAYOUT.DATE AS DATE, SUM_AMOUNT, IFNULL(SUM_CAPTURED,0), (SUM_AMOUNT-SUM_CAPTURED) OUTSTANDING
+    FROM (
+        SELECT
+        DATE(created_at) AS DATE,
+        SUM(AMOUNT) SUM_AMOUNT
+    FROM
+         advances
+    WHERE
+        STATE = 'ADVANCE_STATE_PAYOUT_SENT'
+    GROUP BY
+        1
+        ) AS PAYOUT
+    LEFT JOIN (
+    SELECT
+            DATE(ap.created_at) AS DATE,
+            SUM(ap.captured_amount) AS SUM_CAPTURED
+        FROM
+            advance_payments ap
+        JOIN
+            advances a ON a.id = ap.advance_id
+        WHERE
+            stripe_failure_code IS NULL
+            AND a.accounting_type NOT LIKE '%MIGRATED%'
+        GROUP BY
+            1) CAPTURED
+    ON PAYOUT.DATE = CAPTURED.DATE
+    ORDER BY 1 DESC;
+
+# ADD COLLECTION INTENT TABLE, so many duplicates. two tables are both fine, its caused by join.
+SELECT collection_intents.DATE, TEMP.SUM_AMOUNT,TEMP.SUM_CAPTURED
+FROM
+    (
+        SELECT
+            DISTINCT DATE(processing_scheduled_at) DATE
+        FROM
+            collection_intents
+        WHERE
+            state = "COLLECTION_INTENT_STATE_SCHEDULED"
+        GROUP BY
+            1) as collection_intents
+LEFT JOIN
+(
+    SELECT PAYOUT.DATE AS DATE, SUM_AMOUNT, SUM_CAPTURED, (SUM_AMOUNT-SUM_CAPTURED) OUTSTANDING
+    FROM (
+        SELECT
+        DATE(created_at) AS DATE,
+        SUM(AMOUNT) SUM_AMOUNT
+    FROM
+         advances
+    WHERE
+        STATE = 'ADVANCE_STATE_PAYOUT_SENT'
+    GROUP BY
+        1
+        ) AS PAYOUT
+    LEFT JOIN (
+    SELECT
+            DATE(created_at) AS DATE,
+            SUM(captured_amount) AS SUM_CAPTURED
+        FROM
+            advance_payments
+        WHERE
+            stripe_failure_code IS NULL
+        GROUP BY
+            1) CAPTURED
+    ON PAYOUT.DATE = CAPTURED.DATE
+    ORDER BY 1 DESC) AS TEMP
+ON collection_intents.DATE > TEMP.DATE;
